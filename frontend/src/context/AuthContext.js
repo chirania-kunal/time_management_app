@@ -12,6 +12,8 @@ export const useAuth = () => {
   return context;
 };
 
+const API = process.env.REACT_APP_API_URL;
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
