@@ -37,6 +37,8 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
+const API = process.env.REACT_APP_API_URL;
+
 const DailyActivityView = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dailyActivity, setDailyActivity] = useState(null);
@@ -48,7 +50,7 @@ const DailyActivityView = () => {
     try {
       setLoading(true);
       const dateString = selectedDate.toISOString().split('T')[0];
-      const response = await axios.get(`/api/daily-activities/${dateString}`);
+      const response = await axios.get(`${API}/api/daily-activities/${dateString}`);
       setDailyActivity(response.data.data);
       setError(null);
     } catch (err) {
@@ -65,7 +67,7 @@ const DailyActivityView = () => {
 
   const handleStartTimer = async (taskId) => {
     try {
-      await axios.put(`/api/tasks/${taskId}/start`);
+      await axios.put(`${API}/api/tasks/${taskId}/start`);
       setSuccess('Task timer started');
       fetchDailyActivity();
     } catch (err) {
@@ -75,7 +77,7 @@ const DailyActivityView = () => {
 
   const handleStopTimer = async (taskId) => {
     try {
-      await axios.put(`/api/tasks/${taskId}/stop`);
+      await axios.put(`${API}/api/tasks/${taskId}/stop`);
       setSuccess('Task completed');
       fetchDailyActivity();
     } catch (err) {

@@ -26,6 +26,8 @@ import {
   PlayArrow as PlayIcon
 } from '@mui/icons-material';
 
+const API = process.env.REACT_APP_API_URL;
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
@@ -42,11 +44,11 @@ const Dashboard = () => {
       setLoading(true);
       
       // Fetch productivity stats for today
-      const statsResponse = await axios.get('/api/stats/productivity?period=day');
+      const statsResponse = await axios.get(`${API}/api/stats/productivity?period=day`);
       setStats(statsResponse.data.data);
       
       // Fetch recent tasks
-      const tasksResponse = await axios.get('/api/tasks?limit=5');
+      const tasksResponse = await axios.get(`${API}/api/tasks?limit=5`);
       setRecentTasks(tasksResponse.data.data);
       
       setError(null);

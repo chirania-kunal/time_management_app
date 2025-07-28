@@ -34,6 +34,8 @@ import {
   Stop as StopIcon
 } from '@mui/icons-material';
 
+const API = process.env.REACT_APP_API_URL;
+
 const statusOptions = [
   { value: 'scheduled', label: 'Scheduled' },
   { value: 'in-progress', label: 'In Progress' },
@@ -66,7 +68,7 @@ const TaskManager = () => {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/tasks');
+      const res = await axios.get(`${API}/api/tasks`);
       setTasks(res.data.data);
       setError(null);
     } catch (err) {
@@ -132,10 +134,10 @@ const TaskManager = () => {
     setDialogLoading(true);
     try {
       if (editTask) {
-        await axios.put(`/api/tasks/${editTask._id}`, form);
+        await axios.put(`${API}/api/tasks/${editTask._id}`, form);
         setSuccess('Task updated successfully');
       } else {
-        await axios.post('/api/tasks', form);
+        await axios.post(`${API}/api/tasks`, form);
         setSuccess('Task created successfully');
       }
       handleCloseDialog();
@@ -152,7 +154,7 @@ const TaskManager = () => {
     if (!deleteTaskId) return;
     setDialogLoading(true);
     try {
-      await axios.delete(`/api/tasks/${deleteTaskId}`);
+      await axios.delete(`${API}/api/tasks/${deleteTaskId}`);
       setSuccess('Task deleted successfully');
       setDeleteTaskId(null);
       fetchTasks();
@@ -166,7 +168,7 @@ const TaskManager = () => {
   // Start/Stop timer (for demo, just update status)
   const handleStartTask = async (taskId) => {
     try {
-      await axios.put(`/api/tasks/${taskId}/start`);
+      await axios.put(`${API}/api/tasks/${taskId}/start`);
       setSuccess('Task started');
       fetchTasks();
     } catch (err) {
@@ -175,7 +177,7 @@ const TaskManager = () => {
   };
   const handleStopTask = async (taskId) => {
     try {
-      await axios.put(`/api/tasks/${taskId}/stop`);
+      await axios.put(`${API}/api/tasks/${taskId}/stop`);
       setSuccess('Task completed');
       fetchTasks();
     } catch (err) {

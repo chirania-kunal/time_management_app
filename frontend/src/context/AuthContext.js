@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
     const loadUser = async () => {
       if (token) {
         try {
-          const res = await axios.get('/api/auth/me');
+          const res = await axios.get(`${API}/api/auth/me`);
           setUser(res.data.user);
           setIsAuthenticated(true);
         } catch (err) {
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const res = await axios.post('/api/auth/register', formData);
+      const res = await axios.post(`${API}/api/auth/register`, formData);
       
       localStorage.setItem('token', res.data.token);
       setToken(res.data.token);
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const res = await axios.post('/api/auth/login', formData);
+      const res = await axios.post(`${API}/api/auth/login`, formData);
       
       localStorage.setItem('token', res.data.token);
       setToken(res.data.token);
@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const res = await axios.put('/api/auth/me', formData);
+      const res = await axios.put(`${API}/api/auth/me`, formData);
       
       setUser(res.data.user);
       setLoading(false);
@@ -127,7 +127,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const res = await axios.put('/api/auth/password', formData);
+      const res = await axios.put(`${API}/api/auth/password`, formData);
       
       setLoading(false);
       

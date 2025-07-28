@@ -41,6 +41,8 @@ import {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B6B'];
 
+const API = process.env.REACT_APP_API_URL;
+
 const ProductivityDashboard = () => {
   const [productivityStats, setProductivityStats] = useState(null);
   const [categoryStats, setCategoryStats] = useState([]);
@@ -54,15 +56,15 @@ const ProductivityDashboard = () => {
       setLoading(true);
       
       // Fetch productivity stats
-      const productivityResponse = await axios.get(`/api/stats/productivity?period=${period}`);
+      const productivityResponse = await axios.get(`${API}/api/stats/productivity?period=${period}`);
       setProductivityStats(productivityResponse.data.data);
       
       // Fetch category stats
-      const categoryResponse = await axios.get('/api/stats/categories');
+      const categoryResponse = await axios.get(`${API}/api/stats/categories`);
       setCategoryStats(categoryResponse.data.data);
       
       // Fetch trends
-      const trendsResponse = await axios.get('/api/stats/trends?days=30');
+      const trendsResponse = await axios.get(`${API}/api/stats/trends?days=30`);
       setTrends(trendsResponse.data.data.trends);
       
       setError(null);
