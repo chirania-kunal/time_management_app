@@ -1,12 +1,17 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
-  name: {
+  firstName: {
     type: String,
-    required: [true, 'Please provide a name'],
+    required: [true, 'Please provide first name'],
     trim: true,
-    maxlength: [50, 'Name cannot be more than 50 characters']
+    maxlength: [20, 'Name cannot be more than 50 characters']
+  },
+  lastName:{
+    type: String,
+    required:[true,'Please provide last name'],
+    trim: true,
+    maxlength : [20,'Name cannot be more than 50 characters']
   },
   email: {
     type: String,
@@ -27,7 +32,7 @@ const UserSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now()
   },
   lastLogin: {
     type: Date,
@@ -43,23 +48,18 @@ const UserSchema = new mongoose.Schema({
       type: String,
       enum: ['sunday', 'monday'],
       default: 'monday'
+    },
+    reminderMode: { 
+      type: String, 
+      enum: ['notification', 'call'], 
+      default: 'notification' 
     }
-  }
+  },
+  dailyActivity:[{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"DailyActivity"
+  }]
 }, { timestamps: true });
 
-// Encrypt password using bcrypt
-UserSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    next();
-  }
-  
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-
-// Match user entered password to hashed password in database
-UserSchema.methods.matchPassword = async function(enteredPassword) {
-  return await bcrypt.compare(enteredPassword,   this.password);
-};
 
 module.exports = mongoose.model('User', UserSchema);

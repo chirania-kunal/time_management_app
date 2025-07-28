@@ -1,19 +1,31 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const dotenv = require("dotenv");
 
-// Generate JWT Token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE
-  });
-};
+dotenv.config();
 
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    // data fetch from the request body
+    const { firstName, lastName, email, password, confirmPassword } = req.body;
+
+    if(!firstName || !lastName || !email || !password || !confirmPassword){
+      return res.status(400).json({
+        success: false,
+        message : 'Fill all the data carefully'
+      })
+    }
+
+    if(password !== confirmPassword){
+      return res.status(400).json({
+        success: false,
+        message : 'Password does not match, Try Again'
+      })
+    }
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
@@ -24,30 +36,52 @@ exports.register = async (req, res) => {
       });
     }
 
+    // secure password
+    let hashedPassword;
+    try{
+      hashedPassword = await bcrypt.hash(password, 10);
+    }catch(err){
+        return res.status(500).json({
+          success : false,
+          message: 'Error in hashing Password'
+        })
+    }
+
     // Create user
     const user = await User.create({
-      name,
+      firstName,
+      lastName,
       email,
-      password
+      password: hashedPassword
     });
 
     // Generate token
-    const token = generateToken(user._id);
+    const payload = {
+      email: user.email,
+      id: user._id
+    };
+    
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: '30d'
+    });
 
     res.status(201).json({
       success: true,
       token,
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         preferences: user.preferences
-      }
+      },
+      message: 'User Created Successfully',
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      err: error.message,
+      message: 'User Cannot be registered, Please try again later',
     });
   }
 };
@@ -68,7 +102,7 @@ exports.login = async (req, res) => {
     }
 
     // Check if user exists
-    const user = await User.findOne({ email }).select('+password');
+    let user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -77,7 +111,7 @@ exports.login = async (req, res) => {
     }
 
     // Check if password matches
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -90,18 +124,27 @@ exports.login = async (req, res) => {
     await user.save();
 
     // Generate token
-    const token = generateToken(user._id);
+    const payload = {
+      email: user.email,
+      id: user._id
+    };
+    
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: '30d'
+    });
+
+    // Convert Mongoose document to plain object
+    user = user.toObject();
+    user.token = token;
+    user.password = undefined;
 
     res.status(200).json({
       success: true,
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        preferences: user.preferences
-      }
+      user,
+      message: "User Logged In Successfully"
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -121,7 +164,8 @@ exports.getMe = async (req, res) => {
       success: true,
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         preferences: user.preferences,
         createdAt: user.createdAt,
@@ -141,11 +185,12 @@ exports.getMe = async (req, res) => {
 // @access  Private
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email, preferences } = req.body;
+    const { firstName, lastName, email, preferences } = req.body;
     
     // Build update object
     const updateFields = {};
-    if (name) updateFields.name = name;
+    if (firstName) updateFields.firstName = firstName;
+    if (lastName) updateFields.lastName = lastName;
     if (email) updateFields.email = email;
     if (preferences) updateFields.preferences = preferences;
 
@@ -159,7 +204,8 @@ exports.updateProfile = async (req, res) => {
       success: true,
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         preferences: user.preferences
       }
@@ -183,7 +229,7 @@ exports.updatePassword = async (req, res) => {
     const user = await User.findById(req.user.id).select('+password');
 
     // Check current password
-    const isMatch = await user.matchPassword(currentPassword);
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -191,8 +237,11 @@ exports.updatePassword = async (req, res) => {
       });
     }
 
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
     // Update password
-    user.password = newPassword;
+    user.password = hashedPassword;
     await user.save();
 
     res.status(200).json({

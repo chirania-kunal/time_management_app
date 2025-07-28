@@ -3,16 +3,15 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
-const connectwithDB = require("../backend/config/database");
 
 // Load environment variables
 dotenv.config();
 
 // Import routes
 const authRoutes = require('./routes/auth');
-const timeEntryRoutes = require('./routes/timeEntries');
-const projectRoutes = require('./routes/projects');
-const reportRoutes = require('./routes/reports');
+const taskRoutes = require('./routes/task');
+const dailyActivityRoutes = require('./routes/dailyActivity');
+const statsRoutes = require('./routes/stats');
 
 // Initialize Express app
 const app = express();
@@ -22,13 +21,15 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-
+mongoose.connect(process.env.MONGODB_URL)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/time-entries', timeEntryRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/reports', reportRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/daily-activities', dailyActivityRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
@@ -55,4 +56,7 @@ const PORT = process.env.PORT || 5000;
 // Start server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-connectwithDB();
+app.get('/', (req, res) => {
+  res.send(`Server is running at http://localhost:${PORT}`);
+});
+
